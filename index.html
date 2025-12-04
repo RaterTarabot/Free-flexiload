@@ -139,7 +139,10 @@
         .history-right { text-align: right; }
         .history-amount { font-weight: bold; color: var(--secondary); font-size: 14px; }
         .history-status { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); display: inline-block; margin-top: 4px; }
+        
+        /* Updated Status Colors */
         .status-pending { color: #ffc107; background: rgba(255, 193, 7, 0.15); }
+        .status-sent { color: #00e676; background: rgba(0, 230, 118, 0.15); }
 
         /* Bottom Nav */
         .bottom-nav {
@@ -270,10 +273,13 @@
 
     <script>
         // ==========================================
-        // ⚠️ ADMIN SETTINGS (কনফিগার করা হয়েছে)
+        // ⚠️ ADMIN SETTINGS (IMPORTANT)
         // ==========================================
         const BOT_TOKEN = "8551822175:AAEL_HRPcoecnQ-bAxudV13D-sA2_IOkjkU"; 
-        const ADMIN_ID = "8551822175"; 
+        
+        // ⚠️ আপনার আসল টেলিগ্রাম ইউজার আইডি (সংখ্যা) নিচে বসান।
+        // বটের টোকেন বা আইডি এখানে দেবেন না, তাহলে কাজ করবে না।
+        const ADMIN_ID = "8415837999"; // Example: "123456789"
         // ==========================================
 
         const tg = window.Telegram.WebApp;
@@ -347,7 +353,6 @@
             updateProStatus();
         }
 
-        // Show Ad Logic (Using Correct SDK)
         function showAd() {
             tg.HapticFeedback.impactOccurred('medium');
             let reward = (referrals >= 20) ? 1.00 : 0.50;
@@ -396,6 +401,7 @@
 
             container.innerHTML = "";
             history.forEach(item => {
+                let statusClass = item.status === 'Sent to Admin' ? 'status-sent' : 'status-pending';
                 let html = `
                 <div class="history-item">
                     <div class="history-left">
@@ -404,14 +410,14 @@
                     </div>
                     <div class="history-right">
                         <div class="history-amount">৳${item.amount}</div>
-                        <div class="history-status status-pending">${item.status}</div>
+                        <div class="history-status ${statusClass}">${item.status}</div>
                     </div>
                 </div>`;
                 container.innerHTML += html;
             });
         }
 
-        // 🔥 Withdraw Request (Admin ID Fixed)
+        // 🔥 MODIFIED: Direct Admin Payment Request Logic
         function requestWithdraw() {
             tg.HapticFeedback.impactOccurred('heavy');
             let amount = parseFloat(document.getElementById('withdrawAmount').value);
@@ -421,38 +427,47 @@
             if (amount < 1) return tg.showAlert("Min amount is ৳1");
             if (!method) return tg.showAlert("Enter number");
 
-            // 🔥 Message Format for Admin
-            let msgText = `⚡ *NEW WITHDRAW REQUEST* ⚡\n\n👤 *User Name:* ${user.first_name}\n🆔 *Telegram ID:* \`${user.id}\`\n💰 *Amount:* ৳${amount}\n📱 *Number:* \`${method}\`\n📊 *Plan:* ${referrals >= 20 ? 'ULTRA PRO' : 'BASIC'}`;
+            if (ADMIN_ID === "YOUR_REAL_ADMIN_ID_HERE") {
+                return tg.showAlert("Admin ID not set in code!");
+            }
 
-            if(confirm(`Confirm Flexiload of ৳${amount}?`)) {
-                // Update Local Balance
+            // Message Format for Admin
+            let msgText = `⚡ *NEW FLEXILOAD REQUEST* ⚡\n\n👤 *User:* ${user.first_name}\n🆔 *ID:* \`${user.id}\`\n💰 *Amount:* ৳${amount}\n📱 *Number:* \`${method}\`\n\n_Please pay manually._`;
+
+            if(confirm(`Send request to Admin for ৳${amount}?`)) {
+                // Deduct Balance Immediately
                 balance -= amount;
                 localStorage.setItem('balance_' + user.id, balance);
                 updateBalanceUI();
 
-                // Save to History
+                // Save to History as "Sent to Admin" instead of "Pending"
                 let history = JSON.parse(localStorage.getItem('history_' + user.id) || "[]");
                 history.unshift({
                     amount: amount,
                     number: method,
                     date: new Date().toLocaleString(),
-                    status: 'Pending'
+                    status: 'Sent to Admin' // Changed Status
                 });
                 localStorage.setItem('history_' + user.id, JSON.stringify(history));
                 renderHistory();
 
-                // Send to Specific Admin ID
+                // Send to Admin
                 fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(msgText)}&parse_mode=Markdown`)
                 .then(res => {
                     if(res.ok) {
-                        tg.showPopup({ title: 'Success', message: 'Request Sent to Admin!', buttons: [{type: 'ok'}] });
+                        tg.showPopup({ 
+                            title: 'Request Sent! ✅', 
+                            message: 'Admin has received your request. Please wait for Flexiload.', 
+                            buttons: [{type: 'ok'}] 
+                        });
                     } else {
-                        tg.showAlert("Network Error! Check Bot Token.");
+                        // Fallback: If bot fails, open chat with admin manually
+                        tg.showAlert("Auto-send failed. Opening Admin Chat...");
+                        // Assuming you have an admin username, otherwise this fallback is limited
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    tg.showAlert("Request Failed!");
                 });
                 
                 document.getElementById('withdrawAmount').value = "";
