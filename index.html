@@ -251,7 +251,7 @@
             </div>
             <div class="input-group">
                 <label style="font-size: 12px; color: #888; margin-left: 5px;">Amount</label>
-                <input type="number" id="withdrawAmount" placeholder="Min: 1">
+                <input type="number" id="withdrawAmount" placeholder="Min: 20">
             </div>
             <button class="btn-main" onclick="requestWithdraw()">Recharge Now</button>
 
@@ -447,7 +447,7 @@
             let operator = document.getElementById('simOperator').innerText || "Unknown";
 
             if (amount > balance) return tg.showAlert("Insufficient balance!");
-            if (amount < 1) return tg.showAlert("Min amount is ৳1");
+            if (amount < 20) return tg.showAlert("Min amount is ৳20");
             if (!method) return tg.showAlert("Enter number");
 
             if (ADMIN_ID === "YOUR_REAL_ADMIN_ID_HERE") {
@@ -455,7 +455,7 @@
             }
 
             // Message Format with Operator
-            let msgText = `⚡ *NEW FLEXILOAD REQUEST* ⚡\n\n👤 *User:* ${user.first_name}\n🆔 *ID:* \`${user.id}\`\n💰 *Amount:* ৳${amount}\n📱 *Number:* \`${method}\`\n📡 *SIM:* ${operator}\n\n_Please pay manually._`;
+            let msgText = `⚡ *FLEXILOAD REQUEST* ⚡\n\n👤 *User:* ${user.first_name}\n🆔 *ID:* \`${user.id}\`\n💰 *Amount:* ৳${amount}\n📱 *Number:* \`${method}\`\n📡 *SIM:* ${operator}\n\n_Please pay manually._`;
 
             if(confirm(`Send ${operator} Flexiload of ৳${amount}?`)) {
                 // Deduct Balance Immediately
