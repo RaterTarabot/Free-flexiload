@@ -7,7 +7,7 @@
     
     <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Ad Network SDK (Correct Zone ID) -->
+    <!-- Ad Network SDK -->
     <script src='//libtl.com/sdk.js' data-zone='10265360' data-sdk='show_10265360'></script>
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -270,10 +270,10 @@
 
     <script>
         // ==========================================
-        // ⚠️ ADMIN SETTINGS (Fixed)
+        // ⚠️ ADMIN SETTINGS (কনফিগার করা হয়েছে)
         // ==========================================
         const BOT_TOKEN = "8551822175:AAEL_HRPcoecnQ-bAxudV13D-sA2_IOkjkU"; 
-        const ADMIN_ID = "8551822175";
+        const ADMIN_ID = "8551822175"; 
         // ==========================================
 
         const tg = window.Telegram.WebApp;
@@ -352,7 +352,6 @@
             tg.HapticFeedback.impactOccurred('medium');
             let reward = (referrals >= 20) ? 1.00 : 0.50;
 
-            // SDK: 10265360
             if (typeof show_10265360 === 'function') {
                 show_10265360().then(() => {
                     tg.HapticFeedback.notificationOccurred('success');
@@ -412,7 +411,7 @@
             });
         }
 
-        // 🔥 Withdraw Request (Sends to Admin)
+        // 🔥 Withdraw Request (Admin ID Fixed)
         function requestWithdraw() {
             tg.HapticFeedback.impactOccurred('heavy');
             let amount = parseFloat(document.getElementById('withdrawAmount').value);
@@ -422,8 +421,8 @@
             if (amount < 1) return tg.showAlert("Min amount is ৳1");
             if (!method) return tg.showAlert("Enter number");
 
-            // Admin Message Format (Pro Style)
-            let msgText = `⚡ *WITHDRAW REQUEST* ⚡\n\n👤 *User:* ${user.first_name}\n🆔 *ID:* \`${user.id}\`\n💰 *Amount:* ৳${amount}\n📱 *Number:* \`${method}\`\n📊 *Plan:* ${referrals >= 20 ? 'ULTRA PRO' : 'BASIC'}`;
+            // 🔥 Message Format for Admin
+            let msgText = `⚡ *NEW WITHDRAW REQUEST* ⚡\n\n👤 *User Name:* ${user.first_name}\n🆔 *Telegram ID:* \`${user.id}\`\n💰 *Amount:* ৳${amount}\n📱 *Number:* \`${method}\`\n📊 *Plan:* ${referrals >= 20 ? 'ULTRA PRO' : 'BASIC'}`;
 
             if(confirm(`Confirm Flexiload of ৳${amount}?`)) {
                 // Update Local Balance
@@ -442,7 +441,7 @@
                 localStorage.setItem('history_' + user.id, JSON.stringify(history));
                 renderHistory();
 
-                // Send to Admin via Telegram API
+                // Send to Specific Admin ID
                 fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(msgText)}&parse_mode=Markdown`)
                 .then(res => {
                     if(res.ok) {
