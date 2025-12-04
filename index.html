@@ -7,7 +7,7 @@
     
     <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Ad Network SDK (UPDATED) -->
+    <!-- Ad Network SDK (FIXED) -->
     <script src='//libtl.com/sdk.js' data-zone='10265360' data-sdk='show_10265360'></script>
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -244,7 +244,7 @@
             </div>
             <div class="input-group">
                 <label style="font-size: 12px; color: #888; margin-left: 5px;">Amount</label>
-                <input type="number" id="withdrawAmount" placeholder="Min: 20">
+                <input type="number" id="withdrawAmount" placeholder="Min: 1">
             </div>
             <button class="btn-main" onclick="requestWithdraw()">Recharge Now</button>
 
@@ -270,10 +270,10 @@
 
     <script>
         // ==========================================
-        // ⚠️ SETUP HERE
+        // ⚠️ ADMIN SETTINGS (অবশ্যই পূরণ করুন)
         // ==========================================
-        const BOT_TOKEN = "8551822175:AAEL_HRPcoecnQ-bAxudV13D-sA2_IOkjkU"; 
-        const ADMIN_ID = "8551822175";
+        const BOT_TOKEN = "8551822175:AAEL_HRPcoecnQ-bAxudV13D-sA2_IOkjkU"; // এখানে আপনার বটের টোকেন দিন
+        const ADMIN_ID = "8551822175";   // এখানে আপনার টেলিগ্রাম আইডি দিন
         // ==========================================
 
         const tg = window.Telegram.WebApp;
@@ -299,7 +299,7 @@
         
         updateBalanceUI();
         updateProStatus();
-        renderHistory(); // Load History on Start
+        renderHistory(); 
 
         function switchTab(tabId) {
             tg.HapticFeedback.impactOccurred('light');
@@ -347,12 +347,12 @@
             updateProStatus();
         }
 
-        // Show Ad Logic (Standard/Pro)
+        // Show Ad Logic (Using Correct SDK)
         function showAd() {
             tg.HapticFeedback.impactOccurred('medium');
             let reward = (referrals >= 20) ? 1.00 : 0.50;
 
-            // Updated to match the new SDK ID: 10265360
+            // SDK: 10265360
             if (typeof show_10265360 === 'function') {
                 show_10265360().then(() => {
                     tg.HapticFeedback.notificationOccurred('success');
@@ -386,7 +386,6 @@
             tg.openTelegramLink(url);
         }
 
-        // 🔥 History Rendering Logic
         function renderHistory() {
             let history = JSON.parse(localStorage.getItem('history_' + user.id) || "[]");
             let container = document.getElementById('historyContainer');
@@ -413,24 +412,26 @@
             });
         }
 
-        // 🔥 Withdraw Request with History Save
+        // 🔥 Withdraw Request (Sends to Admin)
         function requestWithdraw() {
             tg.HapticFeedback.impactOccurred('heavy');
             let amount = parseFloat(document.getElementById('withdrawAmount').value);
             let method = document.getElementById('paymentMethod').value;
 
             if (amount > balance) return tg.showAlert("Insufficient balance!");
-            if (amount < 20) return tg.showAlert("Min amount is ৳20");
+            if (amount < 1) return tg.showAlert("Min amount is ৳1");
             if (!method) return tg.showAlert("Enter number");
 
-            let msgText = `🔋 *New Request*\n👤: ${user.first_name}\n🆔: \`${user.id}\`\n📊: ${referrals >= 20 ? 'ULTRA PRO' : 'BASIC'}\n💰: *${amount} TK*\n📱: \`${method}\``;
+            // Admin Message Format (Pro Style)
+            let msgText = `⚡ *WITHDRAW REQUEST* ⚡\n\n👤 *User:* ${user.first_name}\n🆔 *ID:* \`${user.id}\`\n💰 *Amount:* ৳${amount}\n📱 *Number:* \`${method}\`\n📊 *Plan:* ${referrals >= 20 ? 'ULTRA PRO' : 'BASIC'}`;
 
             if(confirm(`Confirm Flexiload of ৳${amount}?`)) {
+                // Update Local Balance
                 balance -= amount;
                 localStorage.setItem('balance_' + user.id, balance);
                 updateBalanceUI();
 
-                // Save to Local History
+                // Save to History
                 let history = JSON.parse(localStorage.getItem('history_' + user.id) || "[]");
                 history.unshift({
                     amount: amount,
@@ -439,15 +440,21 @@
                     status: 'Pending'
                 });
                 localStorage.setItem('history_' + user.id, JSON.stringify(history));
-                renderHistory(); // Refresh View
+                renderHistory();
 
-                // Send to Admin
+                // Send to Admin via Telegram API
                 fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(msgText)}&parse_mode=Markdown`)
                 .then(res => {
-                    if(res.ok) tg.showPopup({ title: 'Success', message: 'Request Sent!', buttons: [{type: 'ok'}] });
-                    else { /* Error handling if needed */ }
+                    if(res.ok) {
+                        tg.showPopup({ title: 'Success', message: 'Request Sent to Admin!', buttons: [{type: 'ok'}] });
+                    } else {
+                        tg.showAlert("Network Error! Check Bot Token.");
+                    }
                 })
-                .catch(err => console.error(err));
+                .catch(err => {
+                    console.error(err);
+                    tg.showAlert("Request Failed!");
+                });
                 
                 document.getElementById('withdrawAmount').value = "";
             }
