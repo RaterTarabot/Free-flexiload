@@ -126,7 +126,7 @@
         .refer-code { font-size: 32px; font-weight: bold; color: var(--secondary); letter-spacing: 2px; margin: 10px 0; text-shadow: 0 0 10px rgba(0, 188, 212, 0.3); }
         .hidden-input { position: absolute; opacity: 0; pointer-events: none; }
 
-        /* History Styles (New) */
+        /* History Styles */
         .history-list { margin-top: 25px; }
         .history-header { font-size: 16px; font-weight: 600; margin-bottom: 15px; border-left: 3px solid var(--primary); padding-left: 10px; }
         .history-item {
@@ -140,7 +140,6 @@
         .history-amount { font-weight: bold; color: var(--secondary); font-size: 14px; }
         .history-status { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); display: inline-block; margin-top: 4px; }
         
-        /* Updated Status Colors */
         .status-pending { color: #ffc107; background: rgba(255, 193, 7, 0.15); }
         .status-sent { color: #00e676; background: rgba(0, 230, 118, 0.15); }
 
@@ -234,7 +233,7 @@
             </div>
         </div>
 
-        <!-- WALLET TAB (With History) -->
+        <!-- WALLET TAB (Updated with SIM Detection) -->
         <div id="wallet" class="section">
             <h2>Get Flexiload</h2>
             <div class="balance-card">
@@ -242,8 +241,13 @@
             </div>
 
             <div class="input-group">
-                <label style="font-size: 12px; color: #888; margin-left: 5px;">Mobile Number</label>
-                <input type="text" id="paymentMethod" placeholder="017xxxxxxxx">
+                <!-- Added ID for SIM Operator Display -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <label style="font-size: 12px; color: #888; margin-left: 5px;">Mobile Number</label>
+                    <span id="simOperator" style="font-size: 12px; color: var(--secondary); font-weight: bold; margin-right: 5px;"></span>
+                </div>
+                <!-- Added oninput event -->
+                <input type="text" id="paymentMethod" placeholder="017xxxxxxxx" oninput="detectOperator()">
             </div>
             <div class="input-group">
                 <label style="font-size: 12px; color: #888; margin-left: 5px;">Amount</label>
@@ -255,7 +259,6 @@
             <div class="history-list">
                 <div class="history-header">Recent History</div>
                 <div id="historyContainer">
-                    <!-- History Items will load here -->
                     <p style="text-align: center; font-size: 12px; color: #666;">No history found.</p>
                 </div>
             </div>
@@ -273,13 +276,10 @@
 
     <script>
         // ==========================================
-        // ⚠️ ADMIN SETTINGS (IMPORTANT)
+        // ⚠️ ADMIN SETTINGS
         // ==========================================
         const BOT_TOKEN = "8551822175:AAEL_HRPcoecnQ-bAxudV13D-sA2_IOkjkU"; 
-        
-        // ⚠️ আপনার আসল টেলিগ্রাম ইউজার আইডি (সংখ্যা) নিচে বসান।
-        // বটের টোকেন বা আইডি এখানে দেবেন না, তাহলে কাজ করবে না।
-        const ADMIN_ID = "8415837999"; // Example: "123456789"
+        const ADMIN_ID = "8415837999"; // ⚠️ আপনার অ্যাডমিন আইডি এখানে দিন
         // ==========================================
 
         const tg = window.Telegram.WebApp;
@@ -417,11 +417,34 @@
             });
         }
 
-        // 🔥 MODIFIED: Direct Admin Payment Request Logic
+        // 🔥 NEW FUNCTION: SIM Operator Detection
+        function detectOperator() {
+            let num = document.getElementById('paymentMethod').value;
+            let opLabel = document.getElementById('simOperator');
+            let operator = "";
+
+            if (num.length >= 3) {
+                let prefix = num.substring(0, 3);
+                if (prefix === "017" || prefix === "013") operator = "Grameenphone";
+                else if (prefix === "019" || prefix === "014") operator = "Banglalink";
+                else if (prefix === "018") operator = "Robi";
+                else if (prefix === "016") operator = "Airtel";
+                else if (prefix === "015") operator = "Teletalk";
+                else operator = "Unknown";
+            } else {
+                operator = "";
+            }
+            
+            opLabel.innerText = operator;
+            return operator;
+        }
+
+        // 🔥 MODIFIED: Request Withdraw with SIM Info
         function requestWithdraw() {
             tg.HapticFeedback.impactOccurred('heavy');
             let amount = parseFloat(document.getElementById('withdrawAmount').value);
             let method = document.getElementById('paymentMethod').value;
+            let operator = document.getElementById('simOperator').innerText || "Unknown";
 
             if (amount > balance) return tg.showAlert("Insufficient balance!");
             if (amount < 1) return tg.showAlert("Min amount is ৳1");
@@ -431,22 +454,22 @@
                 return tg.showAlert("Admin ID not set in code!");
             }
 
-            // Message Format for Admin
-            let msgText = `⚡ *NEW FLEXILOAD REQUEST* ⚡\n\n👤 *User:* ${user.first_name}\n🆔 *ID:* \`${user.id}\`\n💰 *Amount:* ৳${amount}\n📱 *Number:* \`${method}\`\n\n_Please pay manually._`;
+            // Message Format with Operator
+            let msgText = `⚡ *NEW FLEXILOAD REQUEST* ⚡\n\n👤 *User:* ${user.first_name}\n🆔 *ID:* \`${user.id}\`\n💰 *Amount:* ৳${amount}\n📱 *Number:* \`${method}\`\n📡 *SIM:* ${operator}\n\n_Please pay manually._`;
 
-            if(confirm(`Send request to Admin for ৳${amount}?`)) {
+            if(confirm(`Send ${operator} Flexiload of ৳${amount}?`)) {
                 // Deduct Balance Immediately
                 balance -= amount;
                 localStorage.setItem('balance_' + user.id, balance);
                 updateBalanceUI();
 
-                // Save to History as "Sent to Admin" instead of "Pending"
+                // Save to History
                 let history = JSON.parse(localStorage.getItem('history_' + user.id) || "[]");
                 history.unshift({
                     amount: amount,
-                    number: method,
+                    number: method + " (" + operator + ")",
                     date: new Date().toLocaleString(),
-                    status: 'Sent to Admin' // Changed Status
+                    status: 'Sent to Admin'
                 });
                 localStorage.setItem('history_' + user.id, JSON.stringify(history));
                 renderHistory();
@@ -457,13 +480,11 @@
                     if(res.ok) {
                         tg.showPopup({ 
                             title: 'Request Sent! ✅', 
-                            message: 'Admin has received your request. Please wait for Flexiload.', 
+                            message: `Admin notified for ${operator} Flexiload.`, 
                             buttons: [{type: 'ok'}] 
                         });
                     } else {
-                        // Fallback: If bot fails, open chat with admin manually
-                        tg.showAlert("Auto-send failed. Opening Admin Chat...");
-                        // Assuming you have an admin username, otherwise this fallback is limited
+                        tg.showAlert("Auto-send failed. Check connection.");
                     }
                 })
                 .catch(err => {
@@ -471,6 +492,8 @@
                 });
                 
                 document.getElementById('withdrawAmount').value = "";
+                document.getElementById('paymentMethod').value = "";
+                document.getElementById('simOperator').innerText = "";
             }
         }
     </script>
