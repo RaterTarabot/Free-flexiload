@@ -7,8 +7,8 @@
     
     <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Ad Network SDK -->
-    <script src='//libtl.com/sdk.js' data-zone='10273270' data-sdk='show_10273270'></script>
+    <!-- Ad Network SDK (UPDATED) -->
+    <script src='//libtl.com/sdk.js' data-zone='10265360' data-sdk='show_10265360'></script>
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Fonts -->
@@ -352,8 +352,9 @@
             tg.HapticFeedback.impactOccurred('medium');
             let reward = (referrals >= 20) ? 1.00 : 0.50;
 
-            if (typeof show_10273270 === 'function') {
-                show_10273270().then(() => {
+            // Updated to match the new SDK ID: 10265360
+            if (typeof show_10265360 === 'function') {
+                show_10265360().then(() => {
                     tg.HapticFeedback.notificationOccurred('success');
                     balance += reward;
                     localStorage.setItem('balance_' + user.id, balance);
