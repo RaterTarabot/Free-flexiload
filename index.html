@@ -1,501 +1,358 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Free Flexiload</title>
+    <title>Rater Tara🚷</title>
     
-    <!-- Telegram SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Ad Network SDK -->
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <!-- SDK ADDED -->
     <script src='//libtl.com/sdk.js' data-zone='10265360' data-sdk='show_10265360'></script>
-    <!-- Icons -->
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Base Ultra Styles */
         :root {
-            --primary: #0088cc;
-            --secondary: #00bcd4;
-            --gold: #ffd700;
-            --bg-dark: #0f0f11;
-            --card-bg: rgba(30, 30, 35, 0.7);
-            --glass: rgba(255, 255, 255, 0.05);
-            --text-gray: #a1a1aa;
+            /* DARK THEME PALETTE */
+            --primary-gradient: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+            --bg-body: #121212; 
+            --surface: #1e1e1e;
+            --glass-bg: rgba(30, 30, 30, 0.95);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --text-main: #e2e8f0;
+            --text-sub: #94a3b8;
+            --radius-card: 24px;
+            --radius-btn: 50px;
+            --like-color: #ff3b30;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            margin: 0; padding: 0;
-            font-family: 'Poppins', sans-serif;
-            background: radial-gradient(circle at top left, #1a2a3a, var(--bg-dark));
-            color: white;
-            height: 100vh; overflow: hidden; user-select: none;
+        body { 
+            background-color: var(--bg-body); 
+            background-image: radial-gradient(circle at 0% 0%, #2e1065 0%, transparent 50%), radial-gradient(circle at 100% 100%, #172554 0%, transparent 50%);
+            background-attachment: fixed;
+            padding-bottom: 100px; 
+            color: var(--text-main); 
         }
 
-        #loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
-            flex-direction: column; transition: opacity 0.5s;
-        }
-        .spinner {
-            width: 50px; height: 50px;
-            border: 5px solid rgba(255,255,255,0.1);
-            border-top: 5px solid var(--primary);
-            border-radius: 50%; animation: spin 1s linear infinite;
-        }
-
-        .container {
-            padding: 20px; height: calc(100vh - 70px);
-            overflow-y: auto; padding-bottom: 80px;
-        }
-
-        .app-brand {
-            text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 20px;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-transform: uppercase; letter-spacing: 2px;
-        }
-
-        /* Profile & Status */
-        .profile-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
-            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px; padding: 20px; display: flex; align-items: center; gap: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 25px; position: relative; overflow: hidden;
-        }
-        .status-badge {
-            position: absolute; top: 10px; right: 10px;
-            font-size: 10px; padding: 4px 8px; border-radius: 10px;
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ccc;
-        }
-        .status-badge.pro {
-            background: rgba(255, 215, 0, 0.2); border-color: var(--gold);
-            color: var(--gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-            animation: glow 2s infinite alternate;
-        }
-        .avatar {
-            width: 60px; height: 60px;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            font-size: 24px; font-weight: bold;
-        }
-        .info h2 { margin: 0; font-size: 18px; }
-        .info p { margin: 2px 0 0; font-size: 12px; color: var(--text-gray); }
-
-        .balance-card { text-align: center; margin-bottom: 30px; }
-        .balance-amount { font-size: 42px; font-weight: 700; background: linear-gradient(to right, #fff, #bbb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 5px 0; }
-        .balance-title { font-size: 14px; color: var(--text-gray); text-transform: uppercase; letter-spacing: 1px; }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .card {
-            background: var(--card-bg); padding: 20px; border-radius: 18px; text-align: center;
-            transition: transform 0.2s; border: 1px solid rgba(255,255,255,0.05);
-        }
-        .card:active { transform: scale(0.96); background: rgba(255,255,255,0.1); }
-        .card i { font-size: 28px; margin-bottom: 10px; color: var(--secondary); }
-        .card h4 { margin: 0; font-weight: 500; }
-
-        .section { display: none; animation: fadeIn 0.3s ease; }
-        .section.active { display: block; }
-
-        .input-group { margin-top: 15px; text-align: left; }
-        input {
-            width: 100%; padding: 15px; background: rgba(0,0,0,0.3);
-            border: 1px solid #333; border-radius: 12px; color: white; font-size: 16px; outline: none;
-        }
-        input:focus { border-color: var(--primary); }
-        
-        .btn-main {
-            width: 100%; padding: 15px; border: none; border-radius: 12px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            color: white; font-weight: 600; font-size: 16px; margin-top: 15px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
-        }
-
-        /* Progress Bar */
-        .progress-container { width: 100%; background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px; margin: 15px 0; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--gold)); width: 0%; transition: width 0.5s ease; box-shadow: 0 0 10px var(--primary); }
-        .progress-text { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-bottom: 5px; }
-
-        /* Refer Box */
-        .refer-box { background: rgba(255, 255, 255, 0.03); border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 15px; padding: 20px; margin-bottom: 20px; position: relative; }
-        .refer-code { font-size: 32px; font-weight: bold; color: var(--secondary); letter-spacing: 2px; margin: 10px 0; text-shadow: 0 0 10px rgba(0, 188, 212, 0.3); }
-        .hidden-input { position: absolute; opacity: 0; pointer-events: none; }
-
-        /* History Styles */
-        .history-list { margin-top: 25px; }
-        .history-header { font-size: 16px; font-weight: 600; margin-bottom: 15px; border-left: 3px solid var(--primary); padding-left: 10px; }
-        .history-item {
-            background: rgba(30, 30, 35, 0.8); border: 1px solid rgba(255,255,255,0.05);
-            padding: 12px 15px; border-radius: 12px; margin-bottom: 10px;
+        /* HEADER UPDATED WITH LOGO */
+        header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            position: sticky; top: 0; z-index: 100;
+            padding: 10px 20px;
+            border-bottom: var(--glass-border);
             display: flex; justify-content: space-between; align-items: center;
         }
-        .history-left h5 { margin: 0 0 5px 0; font-size: 14px; color: #fff; }
-        .history-left p { margin: 0; font-size: 10px; color: #888; }
-        .history-right { text-align: right; }
-        .history-amount { font-weight: bold; color: var(--secondary); font-size: 14px; }
-        .history-status { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); display: inline-block; margin-top: 4px; }
-        
-        .status-pending { color: #ffc107; background: rgba(255, 193, 7, 0.15); }
-        .status-sent { color: #00e676; background: rgba(0, 230, 118, 0.15); }
-
-        /* Bottom Nav */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(20, 20, 25, 0.9); backdrop-filter: blur(20px);
-            display: flex; justify-content: space-around; padding: 15px 0;
-            border-top: 1px solid rgba(255,255,255,0.05); z-index: 100;
+        .brand-box { display: flex; align-items: center; gap: 10px; }
+        .app-logo { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; border: 1px solid rgba(255,255,255,0.2); }
+        .logo-text { 
+            font-size: 20px; font-weight: 800; 
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .nav-item { color: #666; text-align: center; font-size: 10px; cursor: pointer; transition: color 0.3s; }
-        .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
-        .nav-item.active { color: var(--primary); }
+        .user-head-img { 
+            width: 38px; height: 38px; border-radius: 50%; object-fit: cover; 
+            border: 2px solid #818cf8;
+        }
 
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes glow { from { opacity: 0.8; box-shadow: 0 0 5px var(--gold); } to { opacity: 1; box-shadow: 0 0 20px var(--gold); } }
+        /* NOTICE BAR */
+        #noticeBar {
+            background: linear-gradient(90deg, #dc2626, #991b1b);
+            color: white; font-size: 13px; padding: 8px;
+            display: none; /* Hidden by default until data loads */
+        }
+
+        /* SECTIONS */
+        .page-section { display: none; padding-top: 15px; animation: slideUpFade 0.4s; }
+        .page-section.active { display: block; }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* CARDS */
+        .card {
+            background: var(--surface); 
+            border-radius: var(--radius-card);
+            margin: 0 16px 20px 16px; 
+            padding: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: var(--glass-border);
+            color: var(--text-main);
+        }
+
+        /* POSTS */
+        .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .p-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #333; }
+        .p-info h4 { font-size: 15px; font-weight: 700; color: var(--text-main); margin: 0; }
+        .p-info span { font-size: 11px; color: var(--text-sub); }
+        .p-text { font-size: 14px; line-height: 1.5; color: #d1d5db; margin-bottom: 10px; }
+        .p-media { width: 100%; border-radius: 15px; margin-bottom: 10px; max-height: 400px; object-fit: cover; }
+        
+        /* ACTIONS */
+        .p-actions { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .act-btn { color: var(--text-sub); font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border-radius: 20px; transition: 0.3s; }
+        .act-btn:active { background: #333; transform: scale(0.95); }
+        .act-btn.liked { color: var(--like-color); background: rgba(255, 59, 48, 0.1); }
+
+        /* COMMENT & SEARCH INPUTS */
+        .comment-section { display: none; margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; }
+        .comment-input-area { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
+        .create-input {
+            flex: 1; background: #2d2d35; border: 1px solid #3f3f46; padding: 10px 15px;
+            border-radius: 20px; font-size: 13px; color: white; outline: none;
+        }
+        .post-btn { background: var(--primary-gradient); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: 600; cursor: pointer; }
+        .single-comment { background: #27272a; padding: 8px 12px; border-radius: 10px; margin-bottom: 6px; border-left: 2px solid #818cf8; font-size: 12px; color: #d1d5db; }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 380px;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(20px);
+            display: flex; justify-content: space-evenly;
+            padding: 12px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 30px;
+            z-index: 999;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-item { font-size: 20px; color: #6b7280; transition: 0.3s; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; border-radius: 50%; cursor: pointer; }
+        .nav-item.active { color: white; background: var(--primary-gradient); box-shadow: 0 5px 15px rgba(129, 140, 248, 0.4); transform: translateY(-3px); }
+
+        /* PROFILE */
+        .profile-card { text-align: center; padding: 30px 20px; }
+        .prof-img { 
+            width: 100px; height: 100px; border-radius: 50%; padding: 3px; 
+            background: linear-gradient(#1e1e1e, #1e1e1e), var(--primary-gradient);
+            background-origin: border-box; background-clip: content-box, border-box;
+            margin-bottom: 15px; border: 3px solid transparent;
+        }
+        .search-item-box { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid #333; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
+        .setup-card { background: #1e1e1e; width: 90%; max-width: 320px; padding: 30px 20px; border-radius: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <p style="margin-top: 15px; font-size: 14px; font-weight: bold; letter-spacing: 1px;">FREE FLEXILOAD ⚡</p>
+    <!-- AUTH MODAL -->
+    <div id="authModal" class="modal-overlay" style="display: flex;">
+        <div class="setup-card">
+            <!-- LOGO IN MODAL -->
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEgHegSTsXVIOKWGvuBgmXMgDgEqL_VbRaCtNwi8hOq8BgW1uGxounxjFaZ0-kA47Ula273x0iCbCESPayuX1OU8uX0DNPHxTPHRp_rw2tKRZKSH5jBZUHPZraME07cIz0sbvDjOVUmPI5FXa1sn2DsR7e4ZhFGYZuqYC6AXV8Txdw3Cz2XcOzqDoQAJDVI=s640" style="width:60px; height:60px; border-radius:12px; margin-bottom:10px;">
+            <h2 style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom:5px;">Rater Tara</h2>
+            <p style="font-size:12px; color:#94a3b8; margin-bottom:20px;">Join the community now!</p>
+            
+            <div style="margin-bottom:20px;">
+                <script async src="https://telegram.org/js/telegram-widget.js?22" 
+                        data-telegram-login="ratertara_bot" data-size="large" data-userpic="true" data-radius="12" 
+                        data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
+            </div>
+            <p style="font-size:10px; color:#555; margin-bottom:10px;">OR MANUAL SETUP</p>
+            <input type="text" id="setupName" placeholder="Full Name" class="create-input" style="width:100%; margin-bottom:10px;">
+            <input type="text" id="setupUser" placeholder="@username" class="create-input" style="width:100%; margin-bottom:15px;">
+            <button onclick="manualSave()" class="post-btn" style="width:100%;">Get Started</button>
+        </div>
     </div>
 
-    <div class="container">
-        
-        <!-- HOME TAB -->
-        <div id="home" class="section active">
-            <div class="app-brand">Free Flexiload ⚡</div>
-            <div class="profile-card">
-                <div id="statusBadge" class="status-badge">BASIC PLAN</div>
-                <div class="avatar" id="avatarLetter">U</div>
-                <div class="info">
-                    <h2 id="fullName">User Name</h2>
-                    <p>ID: <span id="userId">000000</span></p>
-                </div>
-            </div>
-            <div class="balance-card">
-                <div class="balance-title">Flexiload Balance</div>
-                <div class="balance-amount">৳<span id="balance">0.00</span></div>
-            </div>
-            <div class="grid">
-                <div class="card" onclick="switchTab('tasks')"><i class="fa-solid fa-play"></i><h4>Watch Ads</h4></div>
-                <div class="card" onclick="switchTab('refer')"><i class="fa-solid fa-user-plus"></i><h4>Invite</h4></div>
-                <div class="card" onclick="switchTab('wallet')"><i class="fa-solid fa-mobile-screen-button"></i><h4>Flexiload</h4></div>
-                <div class="card" onclick="window.open('https://t.me/YourChannel', '_blank')"><i class="fa-brands fa-telegram"></i><h4>Support</h4></div>
-            </div>
+    <!-- HEADER with LOGO -->
+    <header>
+        <div class="brand-box">
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEgHegSTsXVIOKWGvuBgmXMgDgEqL_VbRaCtNwi8hOq8BgW1uGxounxjFaZ0-kA47Ula273x0iCbCESPayuX1OU8uX0DNPHxTPHRp_rw2tKRZKSH5jBZUHPZraME07cIz0sbvDjOVUmPI5FXa1sn2DsR7e4ZhFGYZuqYC6AXV8Txdw3Cz2XcOzqDoQAJDVI=s640" class="app-logo">
+            <div class="logo-text">Rater Tara</div>
         </div>
+        <img id="headerAvatar" src="" class="user-head-img" onclick="switchTab('profile')">
+    </header>
 
-        <!-- TASKS TAB -->
-        <div id="tasks" class="section">
-            <h2 style="margin-bottom: 5px;">Earn Balance</h2>
-            <p style="color: #888; font-size: 13px;" id="adRateText">Watch ads to get Free Flexiload.</p>
-            <div class="card" style="display: flex; align-items: center; gap: 15px; margin-top: 20px; text-align: left;">
-                <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px;">
-                    <i class="fa-solid fa-gift" style="color: gold; margin: 0;"></i>
-                </div>
-                <div style="flex-grow: 1;">
-                    <h4 style="margin: 0;">Premium Ad</h4>
-                    <span style="font-size: 12px; color: #aaa;" id="adRateDisplay">+৳0.50 / View</span>
-                </div>
-                <button class="btn-main" style="width: auto; padding: 8px 20px; margin: 0; font-size: 12px;" onclick="showAd()">VIEW</button>
-            </div>
-        </div>
-
-        <!-- REFER TAB -->
-        <div id="refer" class="section">
-            <div style="text-align: center; margin-top: 20px;">
-                <i class="fa-solid fa-users" style="font-size: 50px; color: var(--primary); margin-bottom: 20px;"></i>
-                <h2>Invite Friends</h2>
-                <p style="color: #aaa; font-size: 13px;">Reach <b>20 Referrals</b> to unlock <b>ULTRA PRO</b> mode (2x Income).</p>
-                
-                <div style="margin: 20px 0; text-align: left;">
-                    <div class="progress-text"><span>Progress</span><span id="progressCount">0 / 20</span></div>
-                    <div class="progress-container"><div class="progress-fill" id="progressBar"></div></div>
-                    <p style="font-size: 11px; color: #666; text-align: center;" id="progressMsg">Keep inviting!</p>
-                </div>
-
-                <div class="refer-box" onclick="copyRef()">
-                    <span style="color: #888; font-size: 12px; text-transform: uppercase;">Your Refer Code</span>
-                    <div class="refer-code" id="displayRefCode">...</div>
-                    <span style="font-size: 11px; color: var(--primary);">Tap Code to Copy Link</span>
-                </div>
-                <input type="text" id="refLink" class="hidden-input" readonly>
-                <div class="grid">
-                    <button class="btn-main" style="margin-top: 0; background: #333;" onclick="copyRef()"><i class="fa-regular fa-copy"></i> Copy</button>
-                    <button class="btn-main" style="margin-top: 0;" onclick="inviteFriend()"><i class="fa-solid fa-share"></i> Share</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- WALLET TAB (Updated with SIM Detection) -->
-        <div id="wallet" class="section">
-            <h2>Get Flexiload</h2>
-            <div class="balance-card">
-                <div class="balance-amount">৳<span id="walletBalance">0.00</span></div>
-            </div>
-
-            <div class="input-group">
-                <!-- Added ID for SIM Operator Display -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                    <label style="font-size: 12px; color: #888; margin-left: 5px;">Mobile Number</label>
-                    <span id="simOperator" style="font-size: 12px; color: var(--secondary); font-weight: bold; margin-right: 5px;"></span>
-                </div>
-                <!-- Added oninput event -->
-                <input type="text" id="paymentMethod" placeholder="017xxxxxxxx" oninput="detectOperator()">
-            </div>
-            <div class="input-group">
-                <label style="font-size: 12px; color: #888; margin-left: 5px;">Amount</label>
-                <input type="number" id="withdrawAmount" placeholder="Min: 20">
-            </div>
-            <button class="btn-main" onclick="requestWithdraw()">Recharge Now</button>
-
-            <!-- HISTORY SECTION -->
-            <div class="history-list">
-                <div class="history-header">Recent History</div>
-                <div id="historyContainer">
-                    <p style="text-align: center; font-size: 12px; color: #666;">No history found.</p>
-                </div>
-            </div>
-        </div>
-
+    <!-- NOTICE BAR (Marquee) -->
+    <div id="noticeBar">
+        <marquee id="marqueeText" behavior="scroll" direction="left">Welcome to Rater Tara App...</marquee>
     </div>
 
-    <!-- Bottom Nav -->
+    <!-- HOME SECTION -->
+    <div id="home" class="page-section active">
+        <div id="feedContainer">
+            <div style="text-align:center; padding:50px; color:#555;">Loading...</div>
+        </div>
+    </div>
+
+    <!-- SEARCH SECTION -->
+    <div id="search" class="page-section">
+        <div class="card" style="min-height: 400px;">
+            <h3>Find Friends</h3>
+            <input type="text" id="searchInput" class="create-input" placeholder="Search by name or ID..." onkeyup="searchUsers()" style="margin-top:15px; width:100%;">
+            <div id="searchResults" style="margin-top:20px;">
+                <p style="text-align:center; color:#555; padding:20px;">Type to search...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MESSAGES SECTION -->
+    <div id="messages" class="page-section">
+        <div class="card" style="text-align:center; padding:50px 20px;">
+            <i class="fas fa-comment-slash" style="font-size:40px; color:#333; margin-bottom:15px;"></i>
+            <h3>Messages</h3>
+            <p style="color:#555;">No new messages</p>
+        </div>
+    </div>
+    
+    <!-- PROFILE SECTION -->
+    <div id="profile" class="page-section">
+        <div class="card profile-card">
+            <img id="profileAvatar" src="" class="prof-img">
+            <h2 id="profileName">...</h2>
+            <p id="profileUser" style="color:#94a3b8;">@...</p>
+            <div id="profileID" style="background: rgba(129, 140, 248, 0.1); color: #818cf8; padding: 5px 15px; border-radius: 15px; display:inline-block; margin-top:10px; font-size:12px;">ID: ...</div>
+
+            <!-- Support Team Link -->
+            <a href="https://t.me/+-_yWNzhPb_c4OTg1" target="_blank" style="text-decoration:none;">
+                <div style="margin-top: 25px; background: #27272a; padding: 12px; border-radius: 15px; color: #e2e8f0; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #3f3f46;">
+                    <i class="fas fa-headset" style="color: #818cf8;"></i> Support Team
+                </div>
+            </a>
+
+            <button onclick="logout()" style="width:100%; margin-top:15px; padding:12px; background:rgba(239, 68, 68, 0.1); color:#EF4444; border:none; border-radius:15px; font-weight:bold; cursor:pointer;">Log Out</button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('home')"><i class="fa-solid fa-house"></i> Home</div>
-        <div class="nav-item" onclick="switchTab('tasks')"><i class="fa-solid fa-layer-group"></i> Tasks</div>
-        <div class="nav-item" onclick="switchTab('wallet')"><i class="fa-solid fa-mobile-screen-button"></i> Load</div>
-        <div class="nav-item" onclick="switchTab('refer')"><i class="fa-solid fa-user-group"></i> Refer</div>
+        <div class="nav-item active" onclick="switchTab('home', this)"><i class="fas fa-home"></i></div>
+        <div class="nav-item" onclick="switchTab('search', this)"><i class="fas fa-search"></i></div>
+        <div class="nav-item" onclick="switchTab('messages', this)"><i class="fas fa-comment-dots"></i></div>
+        <div class="nav-item" onclick="switchTab('profile', this)"><i class="fas fa-user"></i></div>
     </div>
 
     <script>
-        // ==========================================
-        // ⚠️ ADMIN SETTINGS
-        // ==========================================
-        const BOT_TOKEN = "8551822175:AAEL_HRPcoecnQ-bAxudV13D-sA2_IOkjkU"; 
-        const ADMIN_ID = "8415837999"; // ⚠️ আপনার অ্যাডমিন আইডি এখানে দিন
-        // ==========================================
+        // CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyUvmII8y3HAUDyUpkIDRAgqeFlqBP2eU",
+            authDomain: "rater-tara-bot.firebaseapp.com",
+            databaseURL: "https://rater-tara-bot-default-rtdb.firebaseio.com",
+            projectId: "rater-tara-bot",
+            storageBucket: "rater-tara-bot.firebasestorage.app",
+            messagingSenderId: "212269572985",
+            appId: "1:212269572985:web:0a2b21553a514af99485a8"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.enableClosingConfirmation();
+        let currentUser = null;
+        // PROVIDED PROFILE PICTURE
+        const customPhotoLink = "https://blogger.googleusercontent.com/img/a/AVvXsEgHegSTsXVIOKWGvuBgmXMgDgEqL_VbRaCtNwi8hOq8BgW1uGxounxjFaZ0-kA47Ula273x0iCbCESPayuX1OU8uX0DNPHxTPHRp_rw2tKRZKSH5jBZUHPZraME07cIz0sbvDjOVUmPI5FXa1sn2DsR7e4ZhFGYZuqYC6AXV8Txdw3Cz2XcOzqDoQAJDVI=s640"; 
 
-        // Loader
-        setTimeout(() => {
-            document.getElementById('loader').style.opacity = '0';
-            setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 500);
-        }, 1500);
-
-        let user = tg.initDataUnsafe.user || { first_name: "Test User", id: 123456, username: "tester" };
-        let balance = parseFloat(localStorage.getItem('balance_' + user.id)) || 0;
-        let referrals = parseInt(localStorage.getItem('ref_' + user.id)) || 0;
-
-        // Init UI
-        document.getElementById('fullName').innerText = user.first_name;
-        document.getElementById('avatarLetter').innerText = user.first_name.charAt(0);
-        document.getElementById('userId').innerText = user.id;
-        document.getElementById('displayRefCode').innerText = user.id;
-        document.getElementById('refLink').value = `https://t.me/Freeflexiload_bot?start=ref_${user.id}`;
+        function checkAuth() {
+            const stored = localStorage.getItem('rt_user_ultra');
+            if (stored) {
+                currentUser = JSON.parse(stored);
+                document.getElementById('authModal').style.display = 'none';
+                loadUI();
+                listenFeed();
+                listenNotice(); // Listen for admin notices
+            }
+        }
+        function onTelegramAuth(user) {
+            saveUser({ name: user.first_name + " " + (user.last_name||""), username: "@"+user.username, id: user.id.toString(), photo: user.photo_url || customPhotoLink });
+        }
+        function manualSave() {
+            const name = document.getElementById('setupName').value;
+            const user = document.getElementById('setupUser').value;
+            if(name && user) saveUser({ name: name, username: user, id: "U-" + Math.floor(10000+Math.random()*90000), photo: customPhotoLink });
+        }
+        function saveUser(u) {
+            currentUser = u;
+            localStorage.setItem('rt_user_ultra', JSON.stringify(currentUser));
+            db.ref('users/' + currentUser.id).set(currentUser);
+            document.getElementById('authModal').style.display = 'none';
+            loadUI();
+            listenFeed();
+            listenNotice();
+        }
+        function loadUI() {
+            document.getElementById('headerAvatar').src = currentUser.photo;
+            document.getElementById('profileAvatar').src = currentUser.photo;
+            document.getElementById('profileName').innerText = currentUser.name;
+            document.getElementById('profileUser').innerText = currentUser.username;
+            document.getElementById('profileID').innerText = "ID: " + currentUser.id;
+        }
+        function logout() { localStorage.removeItem('rt_user_ultra'); location.reload(); }
         
-        updateBalanceUI();
-        updateProStatus();
-        renderHistory(); 
-
-        function switchTab(tabId) {
-            tg.HapticFeedback.impactOccurred('light');
-            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            
-            if(tabId === 'home') document.querySelectorAll('.nav-item')[0].classList.add('active');
-            if(tabId === 'tasks') document.querySelectorAll('.nav-item')[1].classList.add('active');
-            if(tabId === 'wallet') document.querySelectorAll('.nav-item')[2].classList.add('active');
-            if(tabId === 'refer') document.querySelectorAll('.nav-item')[3].classList.add('active');
+        function switchTab(id, el) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(el) { document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); }
         }
 
-        function updateProStatus() {
-            let isPro = referrals >= 20;
-            let target = 20;
-            let percent = (referrals / target) * 100;
-            if(percent > 100) percent = 100;
-
-            document.getElementById('progressBar').style.width = percent + "%";
-            document.getElementById('progressCount').innerText = `${referrals} / ${target}`;
-
-            let badge = document.getElementById('statusBadge');
-            let msg = document.getElementById('progressMsg');
-            let rateDisplay = document.getElementById('adRateDisplay');
-
-            if (isPro) {
-                badge.innerText = "ULTRA PRO ⚡";
-                badge.classList.add('pro');
-                msg.innerText = "Congratulations! Ultra Pro Active (2x Income)";
-                msg.style.color = "gold";
-                rateDisplay.innerText = "+৳1.00 / View (PRO)";
-                rateDisplay.style.color = "gold";
-            } else {
-                badge.innerText = "BASIC PLAN";
-                badge.classList.remove('pro');
-                msg.innerText = `${target - referrals} more invites to unlock 2x Income!`;
-                rateDisplay.innerText = "+৳0.50 / View";
-            }
-        }
-
-        function updateBalanceUI() {
-            document.getElementById('balance').innerText = balance.toFixed(2);
-            document.getElementById('walletBalance').innerText = balance.toFixed(2);
-            updateProStatus();
-        }
-
-        function showAd() {
-            tg.HapticFeedback.impactOccurred('medium');
-            let reward = (referrals >= 20) ? 1.00 : 0.50;
-
-            if (typeof show_10265360 === 'function') {
-                show_10265360().then(() => {
-                    tg.HapticFeedback.notificationOccurred('success');
-                    balance += reward;
-                    localStorage.setItem('balance_' + user.id, balance);
-                    updateBalanceUI();
-                    let msg = (referrals >= 20) ? `Ultra Pro Bonus! Added ৳${reward.toFixed(2)}` : `Balance Added: ৳${reward.toFixed(2)}`;
-                    tg.showAlert(msg);
-                }).catch(e => tg.showAlert("Ad failed to load."));
-            } else {
-                tg.showAlert(`Testing Mode: Added ৳${reward.toFixed(2)}`);
-                balance += reward;
-                localStorage.setItem('balance_' + user.id, balance);
-                updateBalanceUI();
-            }
-        }
-
-        function copyRef() {
-            let copyText = document.getElementById("refLink");
-            copyText.select();
-            copyText.setSelectionRange(0, 99999);
-            document.execCommand("copy");
-            tg.HapticFeedback.notificationOccurred('success');
-            tg.showPopup({ title: 'Copied!', message: 'Share link to unlock Ultra Pro!', buttons: [{type: 'ok'}] });
-        }
-
-        function inviteFriend() {
-            let link = document.getElementById('refLink').value;
-            let text = `🎁 Free Flexiload! Code: ${user.id}\n\nJoin:`;
-            let url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
-            tg.openTelegramLink(url);
-        }
-
-        function renderHistory() {
-            let history = JSON.parse(localStorage.getItem('history_' + user.id) || "[]");
-            let container = document.getElementById('historyContainer');
-            
-            if(history.length === 0) {
-                container.innerHTML = '<p style="text-align: center; font-size: 12px; color: #666;">No history found.</p>';
-                return;
-            }
-
-            container.innerHTML = "";
-            history.forEach(item => {
-                let statusClass = item.status === 'Sent to Admin' ? 'status-sent' : 'status-pending';
-                let html = `
-                <div class="history-item">
-                    <div class="history-left">
-                        <h5>Flexiload Request</h5>
-                        <p>${item.date} • ${item.number}</p>
-                    </div>
-                    <div class="history-right">
-                        <div class="history-amount">৳${item.amount}</div>
-                        <div class="history-status ${statusClass}">${item.status}</div>
-                    </div>
-                </div>`;
-                container.innerHTML += html;
+        // LISTEN FOR NOTICE
+        function listenNotice() {
+            db.ref('appNotice').on('value', snap => {
+                const notice = snap.val();
+                if(notice && notice.text) {
+                    document.getElementById('noticeBar').style.display = 'block';
+                    document.getElementById('marqueeText').innerText = notice.text;
+                } else {
+                    document.getElementById('noticeBar').style.display = 'none';
+                }
             });
         }
 
-        // 🔥 NEW FUNCTION: SIM Operator Detection
-        function detectOperator() {
-            let num = document.getElementById('paymentMethod').value;
-            let opLabel = document.getElementById('simOperator');
-            let operator = "";
+        // FEED
+        function listenFeed() {
+            const cont = document.getElementById('feedContainer'); cont.innerHTML = "";
+            db.ref('posts').limitToLast(50).on('child_added', snap => renderPost(snap.val(), snap.key, true));
+        }
+        function renderPost(post, key, prepend) {
+            const mediaHTML = post.mediaType === 'image' ? `<img src="${post.mediaData}" class="p-media">` : (post.mediaType === 'video' ? `<video src="${post.mediaData}" controls class="p-media"></video>` : '');
+            const likesObj = post.likes || {};
+            const isLiked = likesObj[currentUser.id] ? 'liked' : '';
+            const count = Object.keys(likesObj).length || 'Like';
 
-            if (num.length >= 3) {
-                let prefix = num.substring(0, 3);
-                if (prefix === "017" || prefix === "013") operator = "Grameenphone";
-                else if (prefix === "019" || prefix === "014") operator = "Banglalink";
-                else if (prefix === "018") operator = "Robi";
-                else if (prefix === "016") operator = "Airtel";
-                else if (prefix === "015") operator = "Teletalk";
-                else operator = "Unknown";
-            } else {
-                operator = "";
-            }
-            
-            opLabel.innerText = operator;
-            return operator;
+            const html = `
+                <div class="card" id="post-${key}">
+                    <div class="post-header"><img src="${post.userPhoto}" class="p-avatar"><div class="p-info"><h4>${post.userName}</h4><span>${post.time}</span></div></div>
+                    <div class="p-text">${post.text}</div>${mediaHTML}
+                    <div class="p-actions">
+                        <div class="act-btn ${isLiked}" onclick="toggleLike('${key}')"><i class="${isLiked?'fas':'far'} fa-heart"></i> ${count}</div>
+                    </div>
+                </div>`;
+            if(prepend) document.getElementById('feedContainer').insertAdjacentHTML('afterbegin', html);
+            else document.getElementById('feedContainer').insertAdjacentHTML('beforeend', html);
+        }
+        function toggleLike(key) {
+            const ref = db.ref(`posts/${key}/likes/${currentUser.id}`);
+            ref.once('value', snap => { if(snap.exists()) ref.remove(); else ref.set(true); });
         }
 
-        // 🔥 MODIFIED: Request Withdraw with SIM Info
-        function requestWithdraw() {
-            tg.HapticFeedback.impactOccurred('heavy');
-            let amount = parseFloat(document.getElementById('withdrawAmount').value);
-            let method = document.getElementById('paymentMethod').value;
-            let operator = document.getElementById('simOperator').innerText || "Unknown";
+        // SEARCH
+        function searchUsers() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const resBox = document.getElementById('searchResults');
+            if(query.length < 1) { resBox.innerHTML = '<p style="text-align:center; color:#555; padding:20px;">Type to search...</p>'; return; }
 
-            if (amount > balance) return tg.showAlert("Insufficient balance!");
-            if (amount < 20) return tg.showAlert("Min amount is ৳20");
-            if (!method) return tg.showAlert("Enter number");
-
-            if (ADMIN_ID === "YOUR_REAL_ADMIN_ID_HERE") {
-                return tg.showAlert("Admin ID not set in code!");
-            }
-
-            // Message Format with Operator
-            let msgText = `⚡ *FLEXILOAD REQUEST* ⚡\n\n👤 *User:* ${user.first_name}\n🆔 *ID:* \`${user.id}\`\n💰 *Amount:* ৳${amount}\n📱 *Number:* \`${method}\`\n📡 *SIM:* ${operator}\n\n_Please pay manually._`;
-
-            if(confirm(`Send ${operator} Flexiload of ৳${amount}?`)) {
-                // Deduct Balance Immediately
-                balance -= amount;
-                localStorage.setItem('balance_' + user.id, balance);
-                updateBalanceUI();
-
-                // Save to History
-                let history = JSON.parse(localStorage.getItem('history_' + user.id) || "[]");
-                history.unshift({
-                    amount: amount,
-                    number: method + " (" + operator + ")",
-                    date: new Date().toLocaleString(),
-                    status: 'Sent to Admin'
-                });
-                localStorage.setItem('history_' + user.id, JSON.stringify(history));
-                renderHistory();
-
-                // Send to Admin
-                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(msgText)}&parse_mode=Markdown`)
-                .then(res => {
-                    if(res.ok) {
-                        tg.showPopup({ 
-                            title: 'Request Sent! ✅', 
-                            message: `Admin notified for ${operator} Flexiload.`, 
-                            buttons: [{type: 'ok'}] 
-                        });
-                    } else {
-                        tg.showAlert("Auto-send failed. Check connection.");
+            db.ref('users').once('value', snap => {
+                resBox.innerHTML = "";
+                snap.forEach(child => {
+                    const u = child.val();
+                    if((u.name && u.name.toLowerCase().includes(query)) || (u.id && u.id.toString().includes(query))) {
+                        resBox.innerHTML += `
+                            <div class="search-item-box">
+                                <img src="${u.photo}" style="width:40px; height:40px; border-radius:50%;">
+                                <div><div style="font-weight:bold; color:#e2e8f0;">${u.name}</div><div style="font-size:12px; color:#94a3b8;">${u.username}</div></div>
+                            </div>`;
                     }
-                })
-                .catch(err => {
-                    console.error(err);
                 });
-                
-                document.getElementById('withdrawAmount').value = "";
-                document.getElementById('paymentMethod').value = "";
-                document.getElementById('simOperator').innerText = "";
-            }
+            });
         }
+
+        checkAuth();
     </script>
 </body>
 </html>
